@@ -42,6 +42,7 @@ export const AllTasksModal: React.FC<AllTasksModalProps> = ({
   onOpenCreateModal
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // Handle ESC key
   useEffect(() => {
@@ -315,19 +316,44 @@ export const AllTasksModal: React.FC<AllTasksModalProps> = ({
                       >
                         <Edit3 className="w-4 h-4" />
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (window.confirm(`คุณต้องการลบงาน "${task.title}" ใช่หรือไม่?`)) {
-                            onDeleteTask(task.id);
-                          }
-                        }}
-                        aria-label={`ลบงาน ${task.title}`}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
-                        title="ลบ"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {confirmDeleteId === task.id ? (
+                        <div className="flex items-center gap-1 bg-rose-50 p-0.5 rounded-lg border border-rose-200">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDeleteTask(task.id);
+                              setConfirmDeleteId(null);
+                            }}
+                            className="px-2 py-0.5 rounded bg-rose-600 text-white text-[11px] font-bold hover:bg-rose-700 cursor-pointer"
+                          >
+                            ลบ
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setConfirmDeleteId(null);
+                            }}
+                            className="px-2 py-0.5 rounded bg-white text-slate-700 text-[11px] font-medium border border-slate-300 hover:bg-slate-50 cursor-pointer"
+                          >
+                            ยกเลิก
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setConfirmDeleteId(task.id);
+                          }}
+                          aria-label={`ลบงาน ${task.title}`}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
+                          title="ลบ"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
 

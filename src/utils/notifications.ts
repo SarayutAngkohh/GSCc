@@ -36,9 +36,17 @@ export function saveNotificationSettings(settings: NotificationSettings) {
 }
 
 /**
+ * Flag to indicate notification system maintenance status
+ */
+export const IS_NOTIFICATION_MAINTENANCE = true;
+
+/**
  * Synthesizes a pleasant, crystal-clear notification chime using Web Audio API
  */
-export function playNotificationSound() {
+export function playNotificationSound(ignoreMaintenance = false) {
+  if (IS_NOTIFICATION_MAINTENANCE && !ignoreMaintenance) {
+    return;
+  }
   try {
     const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!AudioCtx) return;
@@ -95,10 +103,13 @@ export async function requestWebNotificationPermission(): Promise<NotificationPe
 /**
  * Send Browser Web Notification
  */
-export function sendWebNotification(title: string, body: string) {
+export function sendWebNotification(title: string, body: string, ignoreMaintenance = false) {
+  if (IS_NOTIFICATION_MAINTENANCE && !ignoreMaintenance) {
+    return;
+  }
   const settings = getNotificationSettings();
   if (settings.soundEnabled) {
-    playNotificationSound();
+    playNotificationSound(ignoreMaintenance);
   }
 
   if (!('Notification' in window) || Notification.permission !== 'granted') {
@@ -166,6 +177,11 @@ export function getUpcomingDueTasks(tasks: Task[]) {
  * Check and trigger auto notification once per day
  */
 export function checkAndTriggerDueNotifications(tasks: Task[]) {
+  // If notification system is under maintenance, do not trigger auto alerts
+  if (IS_NOTIFICATION_MAINTENANCE) {
+    return;
+  }
+
   const todayStr = new Date().toISOString().slice(0, 10);
   const lastAlertDate = localStorage.getItem(LAST_ALERT_DATE_KEY);
 

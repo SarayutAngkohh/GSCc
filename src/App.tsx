@@ -150,6 +150,18 @@ export default function App() {
   const [isPWAModalOpen, setIsPWAModalOpen] = useState(false);
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
 
+  // Live sync open task detail modal when another user updates or deletes a task
+  useEffect(() => {
+    if (selectedTaskForDetail) {
+      const freshTask = tasks.find((t) => t.id === selectedTaskForDetail.id);
+      if (freshTask && freshTask !== selectedTaskForDetail) {
+        setSelectedTaskForDetail(freshTask);
+      } else if (!freshTask) {
+        setSelectedTaskForDetail(null);
+      }
+    }
+  }, [tasks, selectedTaskForDetail]);
+
   // Calendar month/year navigation handlers
   const handlePrevMonth = () => {
     setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
@@ -446,13 +458,13 @@ export default function App() {
             </div>
 
             {/* Action buttons inside hero */}
-            <div className="flex items-center gap-2.5 flex-wrap">
+            <div className="grid grid-cols-1 sm:flex sm:items-center gap-2 sm:gap-2.5 w-full md:w-auto">
               {/* Button 1: กดเพื่อบันทึก */}
               <button
                 type="button"
                 onClick={() => handleOpenCreateModal(todayDateStr)}
                 data-testid="btn-create-task"
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold bg-amber-400 text-slate-950 hover:bg-amber-500 active:bg-amber-600 shadow-md shadow-amber-400/20 transition-all cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold bg-amber-400 text-slate-950 hover:bg-amber-500 active:bg-amber-600 shadow-md shadow-amber-400/20 transition-all cursor-pointer w-full sm:w-auto"
               >
                 <PlusCircle className="w-4 h-4 text-slate-950" />
                 <span>+ กดเพื่อบันทึกงานใหม่</span>
@@ -463,7 +475,7 @@ export default function App() {
                 type="button"
                 onClick={() => setIsAllTasksModalOpen(true)}
                 data-testid="btn-view-all-tasks"
-                className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold bg-white/10 hover:bg-white/20 text-white border border-sky-300/30 transition-all cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold bg-white/10 hover:bg-white/20 text-white border border-sky-300/30 transition-all cursor-pointer w-full sm:w-auto"
               >
                 <ListOrdered className="w-4 h-4 text-sky-200" />
                 <span>ดูรายการงานทั้งหมด ({tasks.length})</span>

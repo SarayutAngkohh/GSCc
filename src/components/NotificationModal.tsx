@@ -23,7 +23,8 @@ import {
   requestWebNotificationPermission, 
   sendWebNotification, 
   getUpcomingDueTasks, 
-  formatThaiDate 
+  formatThaiDate,
+  IS_NOTIFICATION_MAINTENANCE
 } from '../utils/notifications';
 
 interface NotificationModalProps {
@@ -64,25 +65,38 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
   };
 
   const handleTestSound = () => {
-    playNotificationSound();
+    if (IS_NOTIFICATION_MAINTENANCE) {
+      showToast('ระบบแจ้งเตือนและเสียงกำลังปิดปรับปรุงชั่วคราว', 'info');
+      return;
+    }
+    playNotificationSound(true);
     showToast('กำลังเล่นเสียงเอฟเฟกต์แจ้งเตือน 🔔', 'info');
   };
 
   const handleRequestPermission = async () => {
+    if (IS_NOTIFICATION_MAINTENANCE) {
+      showToast('ระบบแจ้งเตือนกำลังปิดปรับปรุงชั่วคราว', 'info');
+      return;
+    }
     const res = await requestWebNotificationPermission();
     setPermissionStatus(res);
     if (res === 'granted') {
       showToast('เปิดรับการแจ้งเตือนผ่านเบราว์เซอร์สำเร็จแล้ว!', 'success');
-      sendWebNotification('เปิดการแจ้งเตือนสำเร็จ!', 'ระบบจะแจ้งเตือนงานที่ต้องส่งวันนี้และอีก 3 วันข้างหน้า');
+      sendWebNotification('เปิดการแจ้งเตือนสำเร็จ!', 'ระบบจะแจ้งเตือนงานที่ต้องส่งวันนี้และอีก 3 วันข้างหน้า', true);
     } else {
       showToast('ไม่สามารถเปิดการแจ้งเตือนได้ โปรดตรวจสอบการอนุญาตในเบราว์เซอร์', 'error');
     }
   };
 
   const handleTestNotification = () => {
+    if (IS_NOTIFICATION_MAINTENANCE) {
+      showToast('ระบบแจ้งเตือนกำลังปิดปรับปรุงชั่วคราว', 'info');
+      return;
+    }
     sendWebNotification(
       '🔔 ทดสอบการแจ้งเตือนจาก Genius Society',
-      'ระบบการแจ้งเตือนงานและการบ้านทำงานได้ตามปกติแล้วครับ!'
+      'ระบบการแจ้งเตือนงานและการบ้านทำงานได้ตามปกติแล้วครับ!',
+      true
     );
     showToast('ส่งการแจ้งเตือนทดสอบเรียบร้อยแล้ว', 'success');
   };
@@ -159,7 +173,27 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
         </div>
 
         {/* Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1">
+        <div className="p-3.5 sm:p-5 overflow-y-auto space-y-3 sm:space-y-4 flex-1">
+          {/* Maintenance Notice Banner (Requested by user) */}
+          <div className="p-3.5 rounded-2xl bg-amber-500/10 border-2 border-amber-300 text-amber-950 flex items-start gap-2.5 sm:gap-3 shadow-2xs">
+            <div className="p-2 rounded-xl bg-amber-400 text-slate-950 flex-shrink-0 mt-0.5 shadow-2xs">
+              <AlertTriangle className="w-4 h-4 text-slate-950" />
+            </div>
+            <div className="min-w-0 space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-xs sm:text-sm font-bold font-prompt text-amber-950">
+                  ระบบการแจ้งเตือนกำลังปิดปรับปรุงชั่วคราว
+                </h3>
+                <span className="text-[10px] font-extrabold bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full">
+                  Under Maintenance
+                </span>
+              </div>
+              <p className="text-[11px] sm:text-xs text-amber-900 leading-relaxed">
+                ขณะนี้ระบบเสียงเอฟเฟกต์และ Web Push Notification กำลังปิดปรับปรุงชั่วคราวตามคำสั่งของผู้ดูแล แต่คุณยังคงสามารถตรวจสอบรายการงานที่ต้องส่งวันนี้และอีก 3 วันข้างหน้าได้ตามปกติด้านล่างนี้ครับ
+              </p>
+            </div>
+          </div>
+
           {activeTab === 'tasks' ? (
             <div className="space-y-4">
               
@@ -315,58 +349,59 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
             <div className="space-y-4">
               
               {/* Toggles */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                  <Settings className="w-4 h-4 text-sky-600" />
-                  <span>ตัวเลือกการแจ้งเตือน (Preferences)</span>
-                </h3>
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 opacity-80">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <Settings className="w-4 h-4 text-sky-600" />
+                    <span>ตัวเลือกการแจ้งเตือน (Preferences)</span>
+                  </h3>
+                  <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full border border-amber-200">
+                    ปิดปรับปรุงชั่วคราว
+                  </span>
+                </div>
 
                 {/* Toggle: Notify Today */}
-                <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-sky-300 transition-all">
+                <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 cursor-not-allowed opacity-75">
                   <div>
                     <p className="text-xs font-bold text-slate-900">แจ้งเตือนงานที่ต้องส่งวันนี้</p>
-                    <p className="text-[11px] text-slate-500">แจ้งเตือนเมื่อมีงานหรือการบ้านที่มีกำหนดส่งในวันปัจจุบัน</p>
+                    <p className="text-[11px] text-slate-500">แจ้งเตือนเมื่อมีงานหรือการบ้านที่มีกำหนดส่งในวันปัจจุบัน (ปิดปรับปรุงอยู่)</p>
                   </div>
                   <input
                     type="checkbox"
-                    checked={settings.notifyToday}
-                    onChange={(e) => handleUpdateSettings({ notifyToday: e.target.checked })}
-                    className="w-5 h-5 rounded text-sky-600 focus:ring-sky-500 cursor-pointer"
+                    disabled
+                    checked={false}
+                    className="w-5 h-5 rounded text-slate-400 cursor-not-allowed"
                   />
                 </label>
 
                 {/* Toggle: Notify 3 Days */}
-                <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-sky-300 transition-all">
+                <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 cursor-not-allowed opacity-75">
                   <div>
                     <p className="text-xs font-bold text-slate-900">แจ้งเตือนงานล่วงหน้า 3 วัน</p>
-                    <p className="text-[11px] text-slate-500">แจ้งเตือนเตรียมตัวล่วงหน้าสำหรับงานที่มีกำหนดส่งในอีก 3 วัน</p>
+                    <p className="text-[11px] text-slate-500">แจ้งเตือนเตรียมตัวล่วงหน้าสำหรับงานที่มีกำหนดส่งในอีก 3 วัน (ปิดปรับปรุงอยู่)</p>
                   </div>
                   <input
                     type="checkbox"
-                    checked={settings.notifyThreeDays}
-                    onChange={(e) => handleUpdateSettings({ notifyThreeDays: e.target.checked })}
-                    className="w-5 h-5 rounded text-sky-600 focus:ring-sky-500 cursor-pointer"
+                    disabled
+                    checked={false}
+                    className="w-5 h-5 rounded text-slate-400 cursor-not-allowed"
                   />
                 </label>
 
                 {/* Toggle: Sound effect */}
-                <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-sky-300 transition-all">
+                <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 cursor-not-allowed opacity-75">
                   <div className="flex items-center gap-2.5">
-                    {settings.soundEnabled ? (
-                      <Volume2 className="w-5 h-5 text-amber-500" />
-                    ) : (
-                      <VolumeX className="w-5 h-5 text-slate-400" />
-                    )}
+                    <VolumeX className="w-5 h-5 text-slate-400" />
                     <div>
                       <p className="text-xs font-bold text-slate-900">เสียงเอฟเฟกต์แจ้งเตือน (Sound Chime)</p>
-                      <p className="text-[11px] text-slate-500">เล่นเสียงกระดิ่งใสเมื่อมีการแจ้งเตือนงาน</p>
+                      <p className="text-[11px] text-slate-500">ปิดปรับปรุงชั่วคราวตามคำสั่งของผู้ดูแล</p>
                     </div>
                   </div>
                   <input
                     type="checkbox"
-                    checked={settings.soundEnabled}
-                    onChange={(e) => handleUpdateSettings({ soundEnabled: e.target.checked })}
-                    className="w-5 h-5 rounded text-sky-600 focus:ring-sky-500 cursor-pointer"
+                    disabled
+                    checked={false}
+                    className="w-5 h-5 rounded text-slate-400 cursor-not-allowed"
                   />
                 </label>
               </div>
@@ -376,55 +411,38 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                 <button
                   type="button"
                   onClick={handleTestSound}
-                  className="flex-1 py-2.5 px-4 rounded-2xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-600 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
-                  <Play className="w-4 h-4 text-amber-600" />
-                  <span>ทดสอบฟังเสียงแจ้งเตือน (Test Chime)</span>
+                  <Play className="w-4 h-4 text-slate-500" />
+                  <span>ทดสอบฟังเสียงแจ้งเตือน (ระบบปิดปรับปรุงชั่วคราว)</span>
                 </button>
               </div>
 
               {/* Browser Web Push Notification Section */}
-              <div className="p-4 rounded-2xl bg-sky-50/70 border-2 border-sky-200 space-y-3">
+              <div className="p-4 rounded-2xl bg-slate-50 border-2 border-slate-200 space-y-3 opacity-90">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-sky-950 flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-sky-600" />
+                  <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-slate-500" />
                     <span>การแจ้งเตือนผ่านเบราว์เซอร์ (Web Push Notifications)</span>
                   </h4>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    permissionStatus === 'granted'
-                      ? 'bg-emerald-100 text-emerald-800'
-                      : permissionStatus === 'denied'
-                      ? 'bg-rose-100 text-rose-800'
-                      : 'bg-amber-100 text-amber-800'
-                  }`}>
-                    {permissionStatus === 'granted' ? 'เปิดใช้งานแล้ว' : permissionStatus === 'denied' ? 'ถูกปิดกั้น' : 'ยังไม่ได้เปิด'}
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                    ปิดปรับปรุงชั่วคราว
                   </span>
                 </div>
 
                 <p className="text-[11px] text-slate-600 leading-relaxed">
-                  เมื่อเปิดใช้งาน เบราว์เซอร์จะส่งข้อความแจ้งเตือนเด้งขึ้นบนหน้าจอของคุณหรือบนสมาร์ตโฟน แม้ในขณะที่ไม่ได้เปิดหน้าต่างแอปไว้
+                  ฟังก์ชันการแจ้งเตือนเบราว์เซอร์กำลังอยู่ระหว่างการปิดปรับปรุงระบบชั่วคราวตามที่กำหนด
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-2 pt-1">
-                  {permissionStatus !== 'granted' ? (
-                    <button
-                      type="button"
-                      onClick={handleRequestPermission}
-                      className="flex-1 py-2.5 px-4 rounded-2xl bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white text-xs font-bold shadow-md shadow-sky-200 transition-all cursor-pointer flex items-center justify-center gap-2"
-                    >
-                      <Bell className="w-4 h-4" />
-                      <span>เปิดรับการแจ้งเตือนผ่านเบราว์เซอร์</span>
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleTestNotification}
-                      className="flex-1 py-2.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-bold shadow-md shadow-emerald-200 transition-all cursor-pointer flex items-center justify-center gap-2"
-                    >
-                      <Send className="w-4 h-4" />
-                      <span>ส่งการแจ้งเตือนทดสอบ (Test Push)</span>
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={handleTestNotification}
+                    className="flex-1 py-2.5 px-4 rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <Send className="w-4 h-4 text-slate-600" />
+                    <span>ส่งการแจ้งเตือนทดสอบ (ปิดปรับปรุงอยู่)</span>
+                  </button>
                 </div>
               </div>
 

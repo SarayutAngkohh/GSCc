@@ -124,41 +124,41 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       <div className="p-3.5 sm:p-5 border-b border-slate-200/80 bg-gradient-to-b from-white to-slate-50/50 space-y-3">
         
         {/* Row 1: Month & Year Controls, Download Image Button */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3">
           
           {/* Month & Year Navigation Controls */}
-          <div className="flex items-center flex-wrap gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap">
             
             {/* Prev / Next Arrows */}
-            <div className="inline-flex rounded-xl shadow-2xs border border-slate-200 bg-white p-0.5">
+            <div className="inline-flex rounded-xl shadow-2xs border border-slate-200 bg-white p-0.5 flex-shrink-0">
               <button
                 type="button"
                 onClick={onPrevMonth}
                 aria-label="เดือนก่อนหน้า"
-                className="p-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer"
+                className="p-1.5 sm:p-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer"
                 title="เดือนก่อนหน้า"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
               <div className="w-[1px] bg-slate-200 my-1" />
               <button
                 type="button"
                 onClick={onNextMonth}
                 aria-label="เดือนถัดไป"
-                className="p-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer"
+                className="p-1.5 sm:p-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer"
                 title="เดือนถัดไป"
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
 
             {/* Quick Month Dropdown */}
-            <div className="relative flex-1 sm:flex-initial">
+            <div className="relative flex-1 min-w-[105px] sm:flex-initial">
               <select
                 aria-label="เลือกเดือน"
                 value={currentMonth}
                 onChange={(e) => onSetMonth(parseInt(e.target.value, 10))}
-                className="w-full sm:w-auto appearance-none bg-white border border-slate-200 text-slate-900 font-bold text-xs sm:text-sm rounded-xl pl-3 pr-7 py-2 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-2xs"
+                className="w-full sm:w-auto appearance-none bg-white border border-slate-200 text-slate-900 font-bold text-xs sm:text-sm rounded-xl pl-2.5 pr-6 sm:pl-3 sm:pr-7 py-1.5 sm:py-2 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-2xs"
               >
                 {THAI_MONTH_NAMES.map((name, index) => (
                   <option key={name} value={index}>
@@ -166,26 +166,26 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   </option>
                 ))}
               </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 text-slate-400">
                 <ChevronRight className="w-3.5 h-3.5 rotate-90" />
               </div>
             </div>
 
             {/* Quick Year Dropdown */}
-            <div className="relative flex-1 sm:flex-initial">
+            <div className="relative flex-1 min-w-[95px] sm:flex-initial">
               <select
                 aria-label="เลือกปี"
                 value={currentYear}
                 onChange={(e) => onSetYear(parseInt(e.target.value, 10))}
-                className="w-full sm:w-auto appearance-none bg-white border border-slate-200 text-slate-900 font-bold text-xs sm:text-sm rounded-xl pl-3 pr-7 py-2 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-2xs"
+                className="w-full sm:w-auto appearance-none bg-white border border-slate-200 text-slate-900 font-bold text-xs sm:text-sm rounded-xl pl-2.5 pr-6 sm:pl-3 sm:pr-7 py-1.5 sm:py-2 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-2xs"
               >
                 {yearOptions.map((year) => (
                   <option key={year} value={year}>
-                    {year} (พ.ศ. {toBuddhistYear(year)})
+                    {year}
                   </option>
                 ))}
               </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 text-slate-400">
                 <ChevronRight className="w-3.5 h-3.5 rotate-90" />
               </div>
             </div>
@@ -195,7 +195,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               type="button"
               onClick={onGoToToday}
               aria-label="กลับไปเดือนปัจจุบัน"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200 active:bg-sky-200 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs font-bold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200 active:bg-sky-200 transition-colors cursor-pointer flex-shrink-0"
             >
               <CalendarIcon className="w-3.5 h-3.5 text-sky-600" />
               <span>วันนี้</span>
@@ -203,18 +203,16 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           </div>
 
           {/* Right Action: Download Schedule Image */}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onOpenDownloadImageModal}
-              title="ดาวน์โหลดรูปภาพตารางงาน เลือกได้หลายเดือน"
-              aria-label="ดาวน์โหลดรูปภาพตารางงาน"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-950 bg-amber-400 hover:bg-amber-500 active:bg-amber-600 active:scale-95 shadow-sm shadow-amber-200 transition-all cursor-pointer"
-            >
-              <ImageIcon className="w-4 h-4 text-slate-950" />
-              <span>ดาวน์โหลดรูปภาพตารางงาน</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={onOpenDownloadImageModal}
+            title="ดาวน์โหลดรูปภาพตารางงาน เลือกได้หลายเดือน"
+            aria-label="ดาวน์โหลดรูปภาพตารางงาน"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-950 bg-amber-400 hover:bg-amber-500 active:bg-amber-600 active:scale-95 shadow-sm shadow-amber-200 transition-all cursor-pointer flex-shrink-0"
+          >
+            <ImageIcon className="w-4 h-4 text-slate-950" />
+            <span>ดาวน์โหลดรูปภาพตารางงาน</span>
+          </button>
 
         </div>
 
