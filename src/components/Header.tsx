@@ -35,7 +35,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-white border-2 border-sky-200 overflow-hidden shadow-md shadow-sky-100 flex-shrink-0 flex items-center justify-center p-0.5 hover:scale-105 transition-transform">
               <img 
-                src="/favicon.png" 
+                src={`${import.meta.env.BASE_URL}favicon.png`} 
                 alt="Cal Genius Society" 
                 className="w-full h-full object-contain rounded-xl"
               />
