@@ -58,7 +58,7 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-sky-500 overflow-hidden shadow-md shadow-sky-200 p-1 flex-shrink-0 flex items-center justify-center bg-white border border-sky-200">
               <img 
-                src="/icon-192.png" 
+                src="${import.meta.env.BASE_URL}icon-192.png" 
                 alt="App Icon" 
                 className="w-full h-full object-contain rounded-xl"
               />
