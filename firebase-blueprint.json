@@ -1,0 +1,68 @@
+{
+  "entities": {
+    "Task": {
+      "title": "Task",
+      "description": "A task, assignment or event in the schedule",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "hasDeadline": { "type": "boolean" },
+        "time": { "type": "string" },
+        "isAllDay": { "type": "boolean" },
+        "categoryId": { "type": "string" },
+        "priority": { "type": "string", "enum": ["low", "medium", "high", "urgent"] },
+        "status": { "type": "string", "enum": ["todo", "in_progress", "completed"] },
+        "subtasks": { "type": "array" },
+        "attachments": { "type": "array" },
+        "history": { "type": "array" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["title", "startDate", "endDate", "categoryId", "status"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "A category tag for tasks",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 100 },
+        "color": { "type": "string" },
+        "bgLight": { "type": "string" },
+        "borderLight": { "type": "string" },
+        "textColor": { "type": "string" },
+        "dotColor": { "type": "string" }
+      },
+      "required": ["name", "color"]
+    },
+    "Member": {
+      "title": "Member",
+      "description": "Genius Society member account and passcode credential",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "passcode": { "type": "string" },
+        "avatarColor": { "type": "string" },
+        "role": { "type": "string" }
+      },
+      "required": ["id", "name"]
+    }
+  },
+  "firestore": {
+    "/tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/Task" },
+      "description": "Collection of tasks"
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Collection of task categories"
+    },
+    "/members/{memberId}": {
+      "schema": { "$ref": "#/entities/Member" },
+      "description": "Collection of group members and passcodes"
+    }
+  }
+}

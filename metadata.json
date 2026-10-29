@@ -1,0 +1,6 @@
+{
+  "name": "ตารางบันทึกแผนงาน & กำหนดส่ง • Genius Society",
+  "description": "แอปบันทึกตารางแผนงาน การบ้าน และกำหนดส่ง แถบสีลากยาวต่อเนื่องทะลุกรอบ By Genius Society",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
