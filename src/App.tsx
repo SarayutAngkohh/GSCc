@@ -612,8 +612,9 @@ export default function App() {
       <footer className="mt-auto border-t border-sky-100 bg-white py-4 text-center text-xs text-slate-500">
         <div className="flex items-center justify-center gap-2 flex-wrap">
           <p>แอปบันทึกตารางแผนงาน การบ้าน และกำหนดส่ง • รองรับ Firebase Realtime DB & Google Sheets Sync</p>
-          <span className="font-bold text-slate-900 bg-slate-50 px-3 py-1 rounded-full border border-sky-200 shadow-2xs">
-            By <span className="text-sky-600 font-extrabold font-prompt">Genius</span> <span className="text-amber-500 font-extrabold font-prompt">Society</span>
+          <span className="font-bold text-slate-900 bg-slate-50 px-3 py-1 rounded-full border border-sky-200 shadow-2xs flex items-center gap-1.5">
+            <span>By <span className="text-sky-600 font-extrabold font-prompt">Genius</span> <span className="text-amber-500 font-extrabold font-prompt">Society</span></span>
+            <span className="text-[10px] text-sky-800 bg-sky-100 font-bold px-1.5 py-0.5 rounded-sm">v1.2</span>
           </span>
         </div>
       </footer>

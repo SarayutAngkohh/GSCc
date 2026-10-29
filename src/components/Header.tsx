@@ -54,6 +54,9 @@ export const Header: React.FC<HeaderProps> = ({
                   <span className="text-sky-600">Genius</span>
                   <span className="text-amber-500">Society</span>
                 </span>
+                <span className="inline-flex items-center text-[9px] sm:text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-sky-100 text-sky-800 border border-sky-300 flex-shrink-0 shadow-2xs">
+                  v1.2
+                </span>
               </div>
               <p className="text-[11px] text-slate-500 font-medium hidden md:block">
                 ระบบจัดการตารางการเรียน การบ้าน และกำหนดส่ง (PWA & Web Push Notification)
