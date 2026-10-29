@@ -56,12 +56,8 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-sky-100 bg-gradient-to-r from-sky-50 via-white to-amber-50 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-sky-500 overflow-hidden shadow-md shadow-sky-200 p-1 flex-shrink-0 flex items-center justify-center bg-white border border-sky-200">
-              <img 
-                src="${import.meta.env.BASE_URL}icon-192.png" 
-                alt="App Icon" 
-                className="w-full h-full object-contain rounded-xl"
-              />
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-sky-500 to-sky-600 shadow-md shadow-sky-200 flex-shrink-0 flex items-center justify-center text-white border border-sky-400">
+              <Smartphone className="w-5 h-5 text-white" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">

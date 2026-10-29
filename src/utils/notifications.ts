@@ -106,7 +106,10 @@ export function sendWebNotification(title: string, body: string) {
   }
 
   try {
-    const iconUrl = `${import.meta.env.BASE_URL}icon-192.png`;
+    const baseUrl = import.meta.env.BASE_URL.startsWith('http')
+      ? import.meta.env.BASE_URL
+      : new URL(import.meta.env.BASE_URL, window.location.origin).href;
+    const iconUrl = new URL('icon-192.png', baseUrl).href;
     new Notification(title, {
       body,
       icon: iconUrl,

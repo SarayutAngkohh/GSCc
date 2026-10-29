@@ -6,7 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(() => {
   return {
-    base: '/GSCc/',
+    base: './',
     plugins: [
       react(),
       tailwindcss(),
@@ -14,24 +14,24 @@ export default defineConfig(() => {
         registerType: 'autoUpdate',
         includeAssets: ['favicon.png', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png'],
         manifest: {
-          id: '/',
+          id: './',
           name: 'Genius Society - ตารางงานและกำหนดส่ง',
           short_name: 'CalGenius',
           description: 'แอปบันทึกตารางแผนงาน การบ้าน และกำหนดส่ง By Genius Society',
           theme_color: '#0284c7',
           background_color: '#f8fafc',
           display: 'standalone',
-          start_url: '/',
-          scope: '/',
+          start_url: './',
+          scope: './',
           icons: [
             {
-              src: '/GSCc/icon-192.png',
+              src: 'icon-192.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/GSCc/icon-512.png',
+              src: 'icon-512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any',

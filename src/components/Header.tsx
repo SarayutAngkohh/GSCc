@@ -8,6 +8,7 @@ import {
   Bell
 } from 'lucide-react';
 import { MemberAccount } from '../types/auth';
+import logoImg from '../assets/logo.png';
 
 interface HeaderProps {
   currentMember: MemberAccount | null;
@@ -33,8 +34,15 @@ export const Header: React.FC<HeaderProps> = ({
           
           {/* Logo with attached User Artwork & Branding */}
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-sky-500 to-sky-600 shadow-md shadow-sky-200 flex-shrink-0 flex items-center justify-center text-white border border-sky-400">
-              <Smartphone className="w-5 h-5 text-white" />
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-white border-2 border-sky-200 overflow-hidden shadow-md shadow-sky-100 flex-shrink-0 flex items-center justify-center p-0.5 hover:scale-105 transition-transform">
+              <img 
+                src={logoImg} 
+                alt="Cal Genius Society" 
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = './favicon.png';
+                }}
+                className="w-full h-full object-contain rounded-xl"
+              />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2">
