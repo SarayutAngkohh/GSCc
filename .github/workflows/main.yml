@@ -1,0 +1,52 @@
+name: Deploy Vite App to GitHub Pages with Bun
+
+on:
+  push:
+    branches: ["main"] # รันอัตโนมัติเมื่อ push ขึ้นกิ่ง main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ติดตั้ง Bun บน GitHub Actions
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      # ติดตั้งแพ็กเกจด้วย Bun
+      - name: Install Dependencies
+        run: bun install
+
+      # Build โปรเจกต์ด้วย Bun
+      - name: Build Project
+        run: bun run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist' # โฟลเดอร์ที่ได้จากการ build ของ Vite
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
