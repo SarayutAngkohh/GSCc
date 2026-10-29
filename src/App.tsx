@@ -16,9 +16,12 @@ import { AddCategoryModal } from './components/AddCategoryModal';
 import { DownloadScheduleImageModal } from './components/DownloadScheduleImageModal';
 import { GoogleSheetsSyncModal } from './components/GoogleSheetsSyncModal';
 import { LoginModal } from './components/LoginModal';
+import { PWAInstallModal } from './components/PWAInstallModal';
+import { NotificationModal } from './components/NotificationModal';
 import { Toast, ToastMessage } from './components/Toast';
 import { ListOrdered, PlusCircle, Sparkles, UserCheck } from 'lucide-react';
 import { DEFAULT_STUDENT_CATEGORIES, formatThaiDate } from './utils/calendar';
+import { getUpcomingDueTasks, checkAndTriggerDueNotifications } from './utils/notifications';
 import { 
   testConnection, 
   subscribeToTasks, 
@@ -144,6 +147,8 @@ export default function App() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [defaultDateForCreate, setDefaultDateForCreate] = useState<string | undefined>(undefined);
   const [isAllTasksModalOpen, setIsAllTasksModalOpen] = useState(false);
+  const [isPWAModalOpen, setIsPWAModalOpen] = useState(false);
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
 
   // Calendar month/year navigation handlers
   const handlePrevMonth = () => {
@@ -382,14 +387,28 @@ export default function App() {
     (t) => (t.startDate <= todayDateStr && todayDateStr <= t.endDate && t.hasDeadline) || t.startDate === todayDateStr
   );
 
+  // Calculate upcoming due tasks (today & next 3 days)
+  const { dueTodayTasks, dueInThreeDaysTasks } = getUpcomingDueTasks(tasks);
+  const urgentTaskCount = dueTodayTasks.length + dueInThreeDaysTasks.length;
+
+  // Trigger sound effect & web push notification check on tasks update
+  useEffect(() => {
+    if (tasks.length > 0) {
+      checkAndTriggerDueNotifications(tasks);
+    }
+  }, [tasks]);
+
   return (
     <div className="min-h-screen bg-slate-100/70 flex flex-col font-prompt selection:bg-sky-200 selection:text-sky-900">
       
       {/* Top Header */}
       <Header
         currentMember={currentMember}
+        urgentTaskCount={urgentTaskCount}
         onOpenLoginModal={() => setIsLoginModalOpen(true)}
         onOpenGoogleSheetsModal={() => setIsGoogleSheetsModalOpen(true)}
+        onOpenPWAModal={() => setIsPWAModalOpen(true)}
+        onOpenNotificationModal={() => setIsNotificationModalOpen(true)}
       />
 
       {/* Main Container */}
@@ -555,6 +574,23 @@ export default function App() {
         onToggleStatus={(taskId) => handleToggleStatus(taskId)}
         onToggleSubtask={(taskId, subtaskId) => handleToggleSubtask(taskId, subtaskId)}
         onOpenCreateModal={() => handleOpenCreateModal()}
+      />
+
+      {/* PWA Install Modal */}
+      <PWAInstallModal
+        isOpen={isPWAModalOpen}
+        onClose={() => setIsPWAModalOpen(false)}
+      />
+
+      {/* Due Tasks & Notification Settings Modal */}
+      <NotificationModal
+        isOpen={isNotificationModalOpen}
+        onClose={() => setIsNotificationModalOpen(false)}
+        tasks={tasks}
+        categories={categories}
+        onSelectTask={(task) => setSelectedTaskForDetail(task)}
+        onToggleStatus={(taskId) => handleToggleStatus(taskId)}
+        showToast={showToast}
       />
 
       {/* Toast Feedback */}
