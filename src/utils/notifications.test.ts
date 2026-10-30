@@ -76,3 +76,62 @@ test('getUpcomingDueTasks correctly identifies tasks due today and in 3 days', (
   assert.equal(result.dueInThreeDaysTasks[0].task.id, 'task-3days-1');
   assert.equal(result.dueInThreeDaysTasks[0].daysLeft, 3);
 });
+
+test('getUpcomingDueTasks correctly categorizes overdue tasks and EXCLUDES tasks without deadline', () => {
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+
+  const pastDate = new Date(today);
+  pastDate.setDate(pastDate.getDate() - 4);
+  const pastDateStr = pastDate.toISOString().slice(0, 10);
+
+  const mockTasks: Task[] = [
+    {
+      id: 'task-overdue-1',
+      title: 'งานที่เลยกำหนดส่งแล้ว (มี deadline)',
+      category: 'homework',
+      startDate: pastDateStr,
+      endDate: pastDateStr,
+      hasDeadline: true, // มีกำหนดส่ง
+      status: 'pending',
+      priority: 'urgent',
+      creator: 'อาร์ม',
+      assignees: ['อาร์ม']
+    },
+    {
+      id: 'task-no-deadline-past',
+      title: 'งานบันทึกอ่านหนังสือเมื่อ 4 วันก่อน (ไม่มี deadline - ห้ามเข้า overdue)',
+      category: 'reading',
+      startDate: pastDateStr,
+      endDate: pastDateStr,
+      hasDeadline: false, // ไม่มีกำหนดส่ง -> ต้องไม่นับเป็นงานเลยกำหนด
+      status: 'pending',
+      priority: 'low',
+      creator: 'เกม',
+      assignees: ['เกม']
+    },
+    {
+      id: 'task-overdue-completed',
+      title: 'งานอดีตที่ส่งเสร็จแล้ว',
+      category: 'project',
+      startDate: pastDateStr,
+      endDate: pastDateStr,
+      hasDeadline: true,
+      status: 'completed', // เสร็จแล้ว -> ไม่นับ
+      priority: 'medium',
+      creator: 'บาส',
+      assignees: ['บาส']
+    }
+  ];
+
+  const result = getUpcomingDueTasks(mockTasks);
+
+  // ตรวจสอบว่า task-overdue-1 ถูกจัดเข้า overdue
+  assert.equal(result.overdueTasks.length, 1);
+  assert.equal(result.overdueTasks[0].task.id, 'task-overdue-1');
+  assert.equal(result.overdueTasks[0].daysOverdue, 4);
+
+  // ตรวจสอบว่า task-no-deadline-past ไม่ถูกนับใน overdue เด็ดขาด
+  const hasNoDeadlineInOverdue = result.overdueTasks.some(o => o.task.id === 'task-no-deadline-past');
+  assert.equal(hasNoDeadlineInOverdue, false, 'งานที่ไม่มี deadline ต้องไม่ถูกนับเป็นงานเลยกำหนด');
+});

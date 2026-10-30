@@ -11,10 +11,11 @@ import {
   FileCheck2, 
   CheckSquare, 
   Clock, 
-  ArrowRight
+  ArrowRight,
+  AlertTriangle
 } from 'lucide-react';
 import { CategoryItem, Task } from '../types/task';
-import { formatThaiDate } from '../utils/calendar';
+import { formatThaiDate, getRealTodayDateString } from '../utils/calendar';
 
 interface AllTasksModalProps {
   isOpen: boolean;
@@ -44,6 +45,10 @@ export const AllTasksModal: React.FC<AllTasksModalProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
+  type TaskFilterTab = 'all' | 'overdue' | 'today' | 'in_progress' | 'completed';
+  const [filterTab, setFilterTab] = useState<TaskFilterTab>('all');
+  const todayStr = getRealTodayDateString();
+
   // Handle ESC key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -55,15 +60,24 @@ export const AllTasksModal: React.FC<AllTasksModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
+  // Counts for tabs (ไม่นับงานที่ไม่มีกำหนดสำหรับ overdue)
+  const overdueCount = useMemo(() => {
+    return tasks.filter(t => t.hasDeadline && t.status !== 'completed' && t.endDate < todayStr).length;
+  }, [tasks, todayStr]);
+
+  const todayCount = useMemo(() => {
+    return tasks.filter(t => t.status !== 'completed' && ((t.hasDeadline && t.endDate === todayStr) || (!t.hasDeadline && t.startDate === todayStr))).length;
+  }, [tasks, todayStr]);
+
   // Days remaining countdown calculator
   const getDaysRemaining = (endDateStr: string, hasDeadline: boolean) => {
     if (!hasDeadline || !endDateStr) {
       return { label: 'ไม่มีกำหนดส่ง', badgeClass: 'bg-slate-100 text-slate-600 border-slate-200' };
     }
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const end = new Date(endDateStr);
-    end.setHours(0, 0, 0, 0);
+    const [y, m, d] = endDateStr.split('-').map(Number);
+    const end = new Date(y, m - 1, d);
+    const [ty, tm, td] = todayStr.split('-').map(Number);
+    const today = new Date(ty, tm - 1, td);
     const diffTime = end.getTime() - today.getTime();
     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
@@ -76,13 +90,28 @@ export const AllTasksModal: React.FC<AllTasksModalProps> = ({
     if (diffDays > 1) {
       return { label: `⏰ เหลืออีก ${diffDays} วัน`, badgeClass: 'bg-sky-50 text-sky-800 border-sky-300 font-semibold' };
     }
-    return { label: `⚠️ เลยกำหนดส่งแล้ว ${Math.abs(diffDays)} วัน`, badgeClass: 'bg-rose-50 text-rose-800 border-rose-300 font-bold' };
+    return { label: `⚠️ เลยกำหนดส่งแล้ว ${Math.abs(diffDays)} วัน`, badgeClass: 'bg-rose-100 text-rose-800 border-rose-300 font-bold shadow-2xs' };
   };
 
   // Filtered tasks
   const filteredTasks = useMemo(() => {
     return tasks
       .filter((task) => {
+        // Tab filtering
+        if (filterTab === 'overdue') {
+          // ไม่นับงานที่ไม่มีกำหนด (hasDeadline: false is strictly ignored)
+          if (!task.hasDeadline || task.status === 'completed' || task.endDate >= todayStr) {
+            return false;
+          }
+        } else if (filterTab === 'today') {
+          const isToday = (task.hasDeadline && task.endDate === todayStr) || (!task.hasDeadline && task.startDate === todayStr);
+          if (!isToday || task.status === 'completed') return false;
+        } else if (filterTab === 'in_progress') {
+          if (task.status === 'completed') return false;
+        } else if (filterTab === 'completed') {
+          if (task.status !== 'completed') return false;
+        }
+
         if (!searchQuery.trim()) return true;
         const q = searchQuery.toLowerCase();
         return (
@@ -92,6 +121,10 @@ export const AllTasksModal: React.FC<AllTasksModalProps> = ({
         );
       })
       .sort((a, b) => {
+        if (filterTab === 'overdue') {
+          // Sort most overdue first
+          return a.endDate.localeCompare(b.endDate);
+        }
         // Sort by deadline first
         if (a.hasDeadline && b.hasDeadline) {
           return a.endDate.localeCompare(b.endDate);
@@ -100,7 +133,7 @@ export const AllTasksModal: React.FC<AllTasksModalProps> = ({
         if (b.hasDeadline) return 1;
         return a.startDate.localeCompare(b.startDate);
       });
-  }, [tasks, searchQuery]);
+  }, [tasks, searchQuery, filterTab, todayStr]);
 
   // Requirement 3.5: เมื่อกดดูรายละเอียด ให้เด้งขึ้นมาพร้อมปิดหน้ารายการออกไปทันที
   const handleOpenDetail = (task: Task) => {
@@ -125,27 +158,39 @@ export const AllTasksModal: React.FC<AllTasksModalProps> = ({
       >
         
         {/* Header - Sky Blue & Yellow Theme */}
-        <div className="p-4 sm:p-5 border-b-2 border-sky-100 bg-gradient-to-r from-sky-50/90 via-white to-amber-50/60 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-sky-500 text-white flex items-center justify-center shadow-md shadow-sky-200">
-              <FileCheck2 className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-extrabold text-sky-600 font-prompt">Genius</span>
-                <span className="text-xs font-extrabold text-amber-500 font-prompt">Society</span>
-                <span className="text-xs font-bold text-slate-400">•</span>
-                <span className="text-xs font-bold text-sky-800 bg-sky-100 px-2 py-0.2 rounded-full">
-                  {tasks.length} งาน
-                </span>
+        <div className="p-3.5 sm:p-5 border-b-2 border-sky-100 bg-gradient-to-r from-sky-50/90 via-white to-amber-50/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-start sm:items-center justify-between w-full sm:w-auto">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-sky-500 text-white flex items-center justify-center shadow-md shadow-sky-200 flex-shrink-0">
+                <FileCheck2 className="w-5 h-5 text-white" />
               </div>
-              <h2 id="all-tasks-title" className="text-lg sm:text-xl font-bold text-slate-900 font-prompt">
-                รายการงานทั้งหมด (Task List)
-              </h2>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[11px] sm:text-xs font-extrabold text-sky-600 font-prompt">Genius</span>
+                  <span className="text-[11px] sm:text-xs font-extrabold text-amber-500 font-prompt">Society</span>
+                  <span className="text-xs font-bold text-slate-400">•</span>
+                  <span className="text-[10px] sm:text-xs font-bold text-sky-800 bg-sky-100 px-2 py-0.2 rounded-full">
+                    {tasks.length} งาน
+                  </span>
+                </div>
+                <h2 id="all-tasks-title" className="text-base sm:text-xl font-bold text-slate-900 font-prompt truncate">
+                  รายการงานทั้งหมด (Task List)
+                </h2>
+              </div>
             </div>
+
+            {/* Mobile close button */}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="ปิดหน้าต่างรายการงานทั้งหมด"
+              className="sm:hidden p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer flex-shrink-0"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto pt-1 sm:pt-0 border-t sm:border-t-0 border-sky-100/60">
             <button
               type="button"
               onClick={() => {
@@ -153,16 +198,17 @@ export const AllTasksModal: React.FC<AllTasksModalProps> = ({
                 onOpenCreateModal();
               }}
               aria-label="บันทึกงานใหม่"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-amber-400 hover:bg-amber-500 text-slate-950 text-xs font-bold shadow-xs cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-2xl bg-amber-400 hover:bg-amber-500 text-slate-950 text-xs font-bold shadow-xs cursor-pointer flex-1 sm:flex-initial"
             >
               <PlusCircle className="w-4 h-4 text-slate-950" />
               <span>+ บันทึกงานใหม่</span>
             </button>
+
             <button
               type="button"
               onClick={onClose}
               aria-label="ปิดหน้าต่างรายการงานทั้งหมด"
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+              className="hidden sm:inline-flex p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -170,7 +216,7 @@ export const AllTasksModal: React.FC<AllTasksModalProps> = ({
         </div>
 
         {/* Search input */}
-        <div className="p-3.5 sm:p-4 border-b border-slate-100 bg-white">
+        <div className="p-3 sm:p-4 border-b border-slate-100 bg-white">
           <div className="relative">
             <Search className="w-4 h-4 text-sky-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
@@ -183,18 +229,95 @@ export const AllTasksModal: React.FC<AllTasksModalProps> = ({
           </div>
         </div>
 
-        {/* Task List Items: Minimalist & crystal clear (Name, Days remaining, Due date, Checklist, Click to open detail) */}
-        <div className="p-4 sm:p-5 overflow-y-auto space-y-3 flex-1 bg-slate-50/60">
+        {/* Category & Status Filter Tabs - Scrollable on mobile */}
+        <div className="flex items-center gap-1.5 px-3 sm:px-4 py-2 border-b border-slate-100 bg-slate-50/70 overflow-x-auto scrollbar-none touch-pan-x">
+          <button
+            type="button"
+            onClick={() => setFilterTab('all')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer flex-shrink-0 ${
+              filterTab === 'all'
+                ? 'bg-sky-600 text-white shadow-xs'
+                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+            }`}
+          >
+            <span>ทั้งหมด</span>
+            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${filterTab === 'all' ? 'bg-sky-700 text-white' : 'bg-slate-100 text-slate-600'}`}>
+              {tasks.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setFilterTab('overdue')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer flex-shrink-0 ${
+              filterTab === 'overdue'
+                ? 'bg-rose-600 text-white shadow-xs shadow-rose-200'
+                : 'bg-white text-rose-700 hover:bg-rose-50 border border-rose-300'
+            }`}
+          >
+            <AlertTriangle className={`w-3.5 h-3.5 ${filterTab === 'overdue' ? 'text-white' : 'text-rose-500'}`} />
+            <span>⚠️ เลยกำหนดแล้ว</span>
+            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${filterTab === 'overdue' ? 'bg-rose-700 text-white' : 'bg-rose-100 text-rose-800'}`}>
+              {overdueCount}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setFilterTab('today')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer flex-shrink-0 ${
+              filterTab === 'today'
+                ? 'bg-amber-500 text-slate-950 shadow-xs'
+                : 'bg-white text-amber-800 hover:bg-amber-50 border border-amber-200'
+            }`}
+          >
+            <span>🔥 ส่งวันนี้</span>
+            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${filterTab === 'today' ? 'bg-amber-600 text-slate-950' : 'bg-amber-100 text-amber-900'}`}>
+              {todayCount}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setFilterTab('in_progress')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer flex-shrink-0 ${
+              filterTab === 'in_progress'
+                ? 'bg-sky-500 text-white shadow-xs'
+                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+            }`}
+          >
+            <span>กำลังทำอยู่</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setFilterTab('completed')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer flex-shrink-0 ${
+              filterTab === 'completed'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+            }`}
+          >
+            <span>เสร็จแล้ว</span>
+          </button>
+        </div>
+
+        {/* Task List Items */}
+        <div className="p-3.5 sm:p-5 overflow-y-auto space-y-3 flex-1 bg-slate-50/60">
           {filteredTasks.length === 0 ? (
-            <div className="text-center py-12 px-4">
-              <div className="w-14 h-14 mx-auto rounded-3xl bg-sky-50 border border-sky-200 text-sky-500 flex items-center justify-center mb-3">
-                <FileCheck2 className="w-7 h-7" />
+            <div className="text-center py-10 px-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto rounded-3xl bg-sky-50 border border-sky-200 text-sky-500 flex items-center justify-center mb-3">
+                <FileCheck2 className="w-6 h-6 sm:w-7 sm:h-7" />
               </div>
-              <h3 className="text-base font-bold text-slate-800 font-prompt">
-                {tasks.length === 0 ? 'ยังไม่มีงานที่บันทึกไว้' : 'ไม่พบงานที่ค้นหา'}
+              <h3 className="text-sm sm:text-base font-bold text-slate-800 font-prompt">
+                {filterTab === 'overdue' 
+                  ? '🎉 ไม่มีงานที่เลยกำหนดส่ง!' 
+                  : (tasks.length === 0 ? 'ยังไม่มีงานที่บันทึกไว้' : 'ไม่พบงานในหมวดหมู่นี้')}
               </h3>
               <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                {tasks.length === 0 ? 'เริ่มต้นกดปุ่ม "+ บันทึกงานใหม่" เพื่อวางแผนงานแรกของคุณ' : 'ลองเปลี่ยนคำค้นหาใหม่อีกครั้ง'}
+                {filterTab === 'overdue'
+                  ? 'ยอดเยี่ยมมาก! ไม่มีงานค้างหรือการบ้านที่เลยกำหนดส่งในขณะนี้'
+                  : (tasks.length === 0 ? 'เริ่มต้นกดปุ่ม "+ บันทึกงานใหม่" เพื่อวางแผนงานแรกของคุณ' : 'ลองเปลี่ยนคำค้นหาหรือเลือกหมวดหมู่อื่น')}
               </p>
             </div>
           ) : (
@@ -207,12 +330,12 @@ export const AllTasksModal: React.FC<AllTasksModalProps> = ({
               return (
                 <div
                   key={task.id}
-                  className={`bg-white rounded-2xl border-2 transition-all p-4 shadow-xs hover:border-sky-400 flex flex-col gap-3 ${
+                  className={`bg-white rounded-2xl border-2 transition-all p-3.5 sm:p-4 shadow-xs hover:border-sky-400 flex flex-col gap-3 ${
                     isCompleted ? 'border-slate-200 bg-slate-50/80 opacity-75' : 'border-sky-100 hover:shadow-sm'
                   }`}
                 >
-                  {/* Row 1: Status checkbox + Name + Days Remaining Countdown */}
-                  <div className="flex items-start justify-between gap-3">
+                  {/* Row 1: Status checkbox + Name + Days Remaining Countdown Badge */}
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5">
                     <div className="flex items-start gap-2.5 flex-1 min-w-0">
                       <button
                         type="button"
@@ -231,7 +354,7 @@ export const AllTasksModal: React.FC<AllTasksModalProps> = ({
                         {/* 1. ชื่องาน (Name) */}
                         <h4 
                           onClick={() => handleOpenDetail(task)}
-                          className={`text-base font-bold text-slate-900 hover:text-sky-600 transition-colors cursor-pointer break-words font-prompt ${
+                          className={`text-sm sm:text-base font-bold text-slate-900 hover:text-sky-600 transition-colors cursor-pointer break-words font-prompt ${
                             isCompleted ? 'line-through text-slate-400' : ''
                           }`}
                         >
@@ -239,8 +362,8 @@ export const AllTasksModal: React.FC<AllTasksModalProps> = ({
                         </h4>
 
                         {/* 2. วันต้องส่ง (Due Date) */}
-                        <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
-                          <Calendar className="w-3.5 h-3.5 text-sky-500" />
+                        <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1 flex-wrap">
+                          <Calendar className="w-3.5 h-3.5 text-sky-500 flex-shrink-0" />
                           <span>
                             {task.hasDeadline 
                               ? `วันต้องส่ง: ${formatThaiDate(task.endDate, { short: true })}` 
@@ -251,8 +374,8 @@ export const AllTasksModal: React.FC<AllTasksModalProps> = ({
                     </div>
 
                     {/* 3. เหลืออีกกี่วันต้องส่ง (Days Remaining Countdown Badge) */}
-                    <div className="flex-shrink-0">
-                      <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs border ${daysInfo.badgeClass}`}>
+                    <div className="flex-shrink-0 self-start sm:self-auto pl-7 sm:pl-0">
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 sm:px-3 rounded-full text-[11px] sm:text-xs border ${daysInfo.badgeClass}`}>
                         {daysInfo.label}
                       </span>
                     </div>
@@ -260,13 +383,13 @@ export const AllTasksModal: React.FC<AllTasksModalProps> = ({
 
                   {/* 4. เช็คลิสต์ (Checklist) */}
                   {totalSubtasks > 0 && (
-                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5 text-xs">
+                    <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5 text-xs">
                       <div className="flex items-center justify-between text-slate-600 font-semibold mb-1">
                         <span className="flex items-center gap-1">
                           <CheckSquare className="w-3.5 h-3.5 text-sky-600" />
                           <span>เช็คลิสต์</span>
                         </span>
-                        <span className="text-[11px] text-sky-700 bg-sky-100 px-2 py-0.2 rounded-full font-bold">
+                        <span className="text-[10px] text-sky-700 bg-sky-100 px-2 py-0.2 rounded-full font-bold">
                           {completedCount}/{totalSubtasks} เสร็จแล้ว
                         </span>
                       </div>
@@ -291,13 +414,13 @@ export const AllTasksModal: React.FC<AllTasksModalProps> = ({
                     </div>
                   )}
 
-                  {/* 5. ปุ่มดูรายละเอียด (Click opens detail AND closes this modal) */}
+                  {/* 5. ปุ่มดูรายละเอียด */}
                   <div className="flex items-center justify-between pt-2 border-t border-slate-100">
                     <button
                       type="button"
                       onClick={() => handleOpenDetail(task)}
                       aria-label={`ดูรายละเอียดงาน ${task.title}`}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-sky-700 bg-sky-50 hover:bg-sky-100 hover:text-sky-900 transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-sky-700 bg-sky-50 hover:bg-sky-100 hover:text-sky-900 transition-colors cursor-pointer"
                     >
                       <span>ดูรายละเอียด</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -364,14 +487,14 @@ export const AllTasksModal: React.FC<AllTasksModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-100 bg-white flex items-center justify-between text-xs">
-          <span className="text-slate-400 font-medium">
+        <div className="p-3.5 sm:p-4 border-t border-slate-100 bg-white flex items-center justify-between text-xs">
+          <span className="text-slate-400 font-medium text-[11px] sm:text-xs">
             <span className="text-sky-600 font-bold">Genius</span> <span className="text-amber-500 font-bold">Society</span> Task Planner
           </span>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-2xl border border-slate-300 font-bold text-slate-700 hover:bg-slate-50 cursor-pointer"
+            className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl border border-slate-300 font-bold text-slate-700 hover:bg-slate-50 cursor-pointer text-xs"
           >
             ปิดหน้าต่าง
           </button>

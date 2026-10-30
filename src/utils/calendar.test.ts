@@ -9,7 +9,8 @@ import {
   isDateInRange,
   calculateDateRangeDays,
   DEFAULT_STUDENT_CATEGORIES,
-  formatThaiDateRange
+  formatThaiDateRange,
+  getRealTodayDateString
 } from './calendar';
 import { Task } from '../types/task';
 
@@ -79,4 +80,12 @@ test('formatThaiDateRange formats properly for both deadline and no deadline', (
 
   const withoutDl = formatThaiDateRange('2026-10-20', '2026-10-25', false);
   assert.match(withoutDl, /ไม่มี Deadline/);
+});
+
+test('getRealTodayDateString returns valid YYYY-MM-DD in Thailand timezone', () => {
+  const dateStr = getRealTodayDateString();
+  assert.match(dateStr, /^\d{4}-\d{2}-\d{2}$/);
+  const formatted = formatThaiDate(dateStr, { includeDayName: true });
+  assert.match(formatted, /^วัน/);
+  assert.match(formatted, /25\d{2}$/);
 });

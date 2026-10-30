@@ -1,4 +1,5 @@
 import { Task } from '../types/task';
+import { getRealTodayDateString } from './calendar';
 
 export interface NotificationSettings {
   notifyToday: boolean;
@@ -143,31 +144,53 @@ export function getDaysDiff(targetDateStr: string, fromDate = new Date()): numbe
   return Math.round(diffTime / (1000 * 60 * 60 * 24));
 }
 
+export interface OverdueTaskItem {
+  task: Task;
+  daysOverdue: number;
+}
+
 /**
- * Filter tasks due today & due in next 3 days
+ * Filter overdue tasks, tasks due today, and tasks due in next 3 days
+ * Note: Tasks with hasDeadline: false are NEVER counted as overdue (per user requirement)
  */
 export function getUpcomingDueTasks(tasks: Task[]) {
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = getRealTodayDateString();
   
+  const overdueTasks: OverdueTaskItem[] = [];
   const dueTodayTasks: Task[] = [];
   const dueInThreeDaysTasks: { task: Task; daysLeft: number }[] = [];
 
   tasks.forEach((t) => {
     if (t.status === 'completed') return;
 
-    const deadlineDate = t.hasDeadline ? t.endDate : t.startDate;
+    // "ไม่นับงานที่ไม่มีกำหนด"
+    // Tasks with no deadline are NEVER overdue!
+    if (!t.hasDeadline) {
+      if (t.startDate === todayStr) {
+        dueTodayTasks.push(t);
+      }
+      return;
+    }
+
+    const deadlineDate = t.endDate || t.startDate;
     if (!deadlineDate) return;
 
     const daysLeft = getDaysDiff(deadlineDate);
 
-    if (daysLeft === 0 || (!t.hasDeadline && t.startDate === todayStr)) {
+    if (daysLeft < 0) {
+      overdueTasks.push({ task: t, daysOverdue: Math.abs(daysLeft) });
+    } else if (daysLeft === 0) {
       dueTodayTasks.push(t);
     } else if (daysLeft > 0 && daysLeft <= 3) {
       dueInThreeDaysTasks.push({ task: t, daysLeft });
     }
   });
 
+  // Sort overdue tasks by most overdue first
+  overdueTasks.sort((a, b) => b.daysOverdue - a.daysOverdue);
+
   return {
+    overdueTasks,
     dueTodayTasks,
     dueInThreeDaysTasks
   };
@@ -182,7 +205,7 @@ export function checkAndTriggerDueNotifications(tasks: Task[]) {
     return;
   }
 
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = getRealTodayDateString();
   const lastAlertDate = localStorage.getItem(LAST_ALERT_DATE_KEY);
 
   // If already alerted today, skip auto push to prevent annoying spam

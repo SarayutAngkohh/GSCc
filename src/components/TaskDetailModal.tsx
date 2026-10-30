@@ -429,14 +429,14 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
         </div>
 
         {/* Modal Bottom Actions */}
-        <div className="p-4 sm:p-5 border-t border-slate-100 bg-slate-50/70 flex flex-wrap items-center justify-between gap-3">
+        <div className="p-3.5 sm:p-5 border-t border-slate-100 bg-slate-50/70 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
           
           {/* Quick Complete / Reactivate Toggle */}
           <button
             type="button"
             onClick={() => onToggleStatus(task.id)}
             aria-label={isCompleted ? 'เปลี่ยนสถานะเป็นยังไม่เสร็จ' : 'ทำเครื่องหมายว่าเสร็จแล้ว'}
-            className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+            className={`inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer w-full sm:w-auto ${
               isCompleted
                 ? 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300'
                 : 'bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 shadow-sm shadow-emerald-200'
@@ -456,7 +456,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
           </button>
 
           {/* Right Action buttons: Edit, Delete, Close */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-end gap-2 w-full sm:w-auto">
             <button
               type="button"
               onClick={() => {
@@ -464,15 +464,15 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 onEdit(task);
               }}
               aria-label="แก้ไขงานนี้"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 transition-colors cursor-pointer flex-1 sm:flex-initial"
             >
               <Edit3 className="w-4 h-4 text-slate-500" />
               <span>แก้ไข</span>
             </button>
 
             {isConfirmingDelete ? (
-              <div className="flex items-center gap-1.5 bg-rose-50 p-1 rounded-xl border border-rose-200 animate-in fade-in">
-                <span className="text-xs text-rose-700 font-bold px-1.5">ยืนยันลบงาน?</span>
+              <div className="flex items-center gap-1 bg-rose-50 p-1 rounded-xl border border-rose-200 animate-in fade-in">
+                <span className="text-xs text-rose-700 font-bold px-1 text-[11px]">ลบงาน?</span>
                 <button
                   type="button"
                   onClick={() => {
@@ -497,7 +497,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 type="button"
                 onClick={() => setIsConfirmingDelete(true)}
                 aria-label="ลบงานนี้"
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors cursor-pointer"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors cursor-pointer flex-1 sm:flex-initial"
               >
                 <Trash2 className="w-4 h-4" />
                 <span>ลบ</span>
@@ -508,7 +508,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               type="button"
               onClick={onClose}
               aria-label="ปิดหน้าต่าง"
-              className="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-colors cursor-pointer"
+              className="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition-colors cursor-pointer"
             >
               ปิด
             </button>

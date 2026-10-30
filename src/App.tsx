@@ -20,7 +20,7 @@ import { PWAInstallModal } from './components/PWAInstallModal';
 import { NotificationModal } from './components/NotificationModal';
 import { Toast, ToastMessage } from './components/Toast';
 import { ListOrdered, PlusCircle, Sparkles, UserCheck } from 'lucide-react';
-import { DEFAULT_STUDENT_CATEGORIES, formatThaiDate } from './utils/calendar';
+import { DEFAULT_STUDENT_CATEGORIES, formatThaiDate, getRealTodayDateString } from './utils/calendar';
 import { getUpcomingDueTasks, checkAndTriggerDueNotifications } from './utils/notifications';
 import { 
   testConnection, 
@@ -131,8 +131,12 @@ export default function App() {
     };
   }, []);
 
-  // Calendar navigation state: current viewed month and year
-  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  // Calendar navigation state: current viewed month and year (defaults to current real date)
+  const [currentDate, setCurrentDate] = useState<Date>(() => {
+    const todayStr = getRealTodayDateString();
+    const [y, m, d] = todayStr.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  });
 
   // Category filter state
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string | 'all'>('all');
@@ -180,7 +184,9 @@ export default function App() {
   };
 
   const handleGoToToday = () => {
-    setCurrentDate(new Date());
+    const todayStr = getRealTodayDateString();
+    const [y, m, d] = todayStr.split('-').map(Number);
+    setCurrentDate(new Date(y, m - 1, d));
   };
 
   // Add new category
@@ -394,14 +400,36 @@ export default function App() {
     setTasks((prev) => [...importedTasks, ...prev]);
   };
 
-  const todayDateStr = new Date().toISOString().slice(0, 10);
+  // Current real date state (auto-adjusts dynamically to real time in Thailand / user timezone)
+  const [todayDateStr, setTodayDateStr] = useState<string>(() => getRealTodayDateString());
+
+  useEffect(() => {
+    const updateToday = () => {
+      const realToday = getRealTodayDateString();
+      setTodayDateStr((prev) => (prev !== realToday ? realToday : prev));
+    };
+    updateToday();
+    const interval = setInterval(updateToday, 10000); // re-sync every 10s
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        updateToday();
+      }
+    };
+    window.addEventListener('focus', updateToday);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', updateToday);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, []);
   const activeTodayTasks = tasks.filter(
     (t) => (t.startDate <= todayDateStr && todayDateStr <= t.endDate && t.hasDeadline) || t.startDate === todayDateStr
   );
 
-  // Calculate upcoming due tasks (today & next 3 days)
-  const { dueTodayTasks, dueInThreeDaysTasks } = getUpcomingDueTasks(tasks);
-  const urgentTaskCount = dueTodayTasks.length + dueInThreeDaysTasks.length;
+  // Calculate upcoming and overdue tasks
+  const { overdueTasks, dueTodayTasks, dueInThreeDaysTasks } = getUpcomingDueTasks(tasks);
+  const urgentTaskCount = overdueTasks.length + dueTodayTasks.length + dueInThreeDaysTasks.length;
 
   // Trigger sound effect & web push notification check on tasks update
   useEffect(() => {
@@ -614,7 +642,7 @@ export default function App() {
           <p>แอปบันทึกตารางแผนงาน การบ้าน และกำหนดส่ง • รองรับ Firebase Realtime DB & Google Sheets Sync</p>
           <span className="font-bold text-slate-900 bg-slate-50 px-3 py-1 rounded-full border border-sky-200 shadow-2xs flex items-center gap-1.5">
             <span>By <span className="text-sky-600 font-extrabold font-prompt">Genius</span> <span className="text-amber-500 font-extrabold font-prompt">Society</span></span>
-            <span className="text-[10px] text-sky-800 bg-sky-100 font-bold px-1.5 py-0.5 rounded-sm">v1.2</span>
+            <span className="text-[10px] text-sky-800 bg-sky-100 font-bold px-1.5 py-0.5 rounded-sm">v1.5</span>
           </span>
         </div>
       </footer>

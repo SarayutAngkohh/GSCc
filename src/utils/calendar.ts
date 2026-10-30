@@ -177,6 +177,27 @@ export function formatDateString(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+/**
+ * Get the real current date as YYYY-MM-DD in Thailand timezone (Asia/Bangkok, UTC+7)
+ * Ensures the date on the main screen, day of week, and Buddhist year adjust to real time
+ */
+export function getRealTodayDateString(): string {
+  try {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Bangkok',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(new Date());
+  } catch {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+}
+
 /** Check if two dates represent the same calendar day */
 export function isSameDay(d1: Date, d2: Date): boolean {
   return (
@@ -264,7 +285,7 @@ export function generateCalendarGrid(year: number, month: number): CalendarDay[]
   const startingDayOfWeek = firstDayOfMonth.getDay(); // 0 is Sunday, 6 is Saturday
   const totalDaysInMonth = lastDayOfMonth.getDate();
   
-  const today = new Date();
+  const realTodayStr = getRealTodayDateString();
   const grid: CalendarDay[] = [];
   
   // Previous month padding days
@@ -272,12 +293,13 @@ export function generateCalendarGrid(year: number, month: number): CalendarDay[]
   for (let i = startingDayOfWeek - 1; i >= 0; i--) {
     const prevDate = new Date(year, month - 1, prevMonthLastDay - i);
     const dayOfWeek = prevDate.getDay();
+    const dStr = formatDateString(prevDate);
     grid.push({
       date: prevDate,
-      dateString: formatDateString(prevDate),
+      dateString: dStr,
       dayNumber: prevMonthLastDay - i,
       isCurrentMonth: false,
-      isToday: isSameDay(prevDate, today),
+      isToday: dStr === realTodayStr,
       isWeekend: dayOfWeek === 0 || dayOfWeek === 6
     });
   }
@@ -286,12 +308,13 @@ export function generateCalendarGrid(year: number, month: number): CalendarDay[]
   for (let day = 1; day <= totalDaysInMonth; day++) {
     const curDate = new Date(year, month, day);
     const dayOfWeek = curDate.getDay();
+    const dStr = formatDateString(curDate);
     grid.push({
       date: curDate,
-      dateString: formatDateString(curDate),
+      dateString: dStr,
       dayNumber: day,
       isCurrentMonth: true,
-      isToday: isSameDay(curDate, today),
+      isToday: dStr === realTodayStr,
       isWeekend: dayOfWeek === 0 || dayOfWeek === 6
     });
   }
@@ -304,12 +327,13 @@ export function generateCalendarGrid(year: number, month: number): CalendarDay[]
   for (let day = 1; day <= extraNeeded; day++) {
     const nextDate = new Date(year, month + 1, day);
     const dayOfWeek = nextDate.getDay();
+    const dStr = formatDateString(nextDate);
     grid.push({
       date: nextDate,
-      dateString: formatDateString(nextDate),
+      dateString: dStr,
       dayNumber: day,
       isCurrentMonth: false,
-      isToday: isSameDay(nextDate, today),
+      isToday: dStr === realTodayStr,
       isWeekend: dayOfWeek === 0 || dayOfWeek === 6
     });
   }
