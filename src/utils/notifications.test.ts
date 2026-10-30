@@ -135,3 +135,29 @@ test('getUpcomingDueTasks correctly categorizes overdue tasks and EXCLUDES tasks
   const hasNoDeadlineInOverdue = result.overdueTasks.some(o => o.task.id === 'task-no-deadline-past');
   assert.equal(hasNoDeadlineInOverdue, false, 'งานที่ไม่มี deadline ต้องไม่ถูกนับเป็นงานเลยกำหนด');
 });
+
+test('getUpcomingDueTasks puts tasks without deadline into noDeadlineTasks instead of dueTodayTasks', () => {
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+
+  const mockTasks: Task[] = [
+    {
+      id: 'task-no-deadline-today',
+      title: 'งานบันทึกวันนี้ที่ไม่มีกำหนดส่ง',
+      category: 'reading',
+      startDate: todayStr,
+      endDate: todayStr,
+      hasDeadline: false,
+      status: 'pending',
+      priority: 'low',
+      creator: 'เกม',
+      assignees: ['เกม']
+    }
+  ];
+
+  const result = getUpcomingDueTasks(mockTasks);
+
+  assert.equal(result.dueTodayTasks.length, 0, 'งานที่ไม่มีกำหนดส่ง ต้องไม่ถูกจัดเข้า dueTodayTasks');
+  assert.equal(result.noDeadlineTasks.length, 1, 'งานที่ไม่มีกำหนดส่ง ต้องจัดเข้า noDeadlineTasks');
+  assert.equal(result.noDeadlineTasks[0].id, 'task-no-deadline-today');
+});

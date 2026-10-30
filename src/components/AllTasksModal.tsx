@@ -45,7 +45,7 @@ export const AllTasksModal: React.FC<AllTasksModalProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  type TaskFilterTab = 'all' | 'overdue' | 'today' | 'in_progress' | 'completed';
+  type TaskFilterTab = 'all' | 'overdue' | 'today' | 'no_deadline' | 'in_progress' | 'completed';
   const [filterTab, setFilterTab] = useState<TaskFilterTab>('all');
   const todayStr = getRealTodayDateString();
 
@@ -60,19 +60,23 @@ export const AllTasksModal: React.FC<AllTasksModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Counts for tabs (ไม่นับงานที่ไม่มีกำหนดสำหรับ overdue)
+  // Counts for tabs (ไม่นับงานที่ไม่มีกำหนดสำหรับ overdue และ today)
   const overdueCount = useMemo(() => {
     return tasks.filter(t => t.hasDeadline && t.status !== 'completed' && t.endDate < todayStr).length;
   }, [tasks, todayStr]);
 
   const todayCount = useMemo(() => {
-    return tasks.filter(t => t.status !== 'completed' && ((t.hasDeadline && t.endDate === todayStr) || (!t.hasDeadline && t.startDate === todayStr))).length;
+    return tasks.filter(t => t.hasDeadline && t.status !== 'completed' && t.endDate === todayStr).length;
   }, [tasks, todayStr]);
+
+  const noDeadlineCount = useMemo(() => {
+    return tasks.filter(t => !t.hasDeadline && t.status !== 'completed').length;
+  }, [tasks]);
 
   // Days remaining countdown calculator
   const getDaysRemaining = (endDateStr: string, hasDeadline: boolean) => {
     if (!hasDeadline || !endDateStr) {
-      return { label: 'ไม่มีกำหนดส่ง', badgeClass: 'bg-slate-100 text-slate-600 border-slate-200' };
+      return { label: '📌 ไม่มีกำหนดส่ง', badgeClass: 'bg-slate-100 text-slate-700 border-slate-200' };
     }
     const [y, m, d] = endDateStr.split('-').map(Number);
     const end = new Date(y, m - 1, d);
@@ -104,8 +108,9 @@ export const AllTasksModal: React.FC<AllTasksModalProps> = ({
             return false;
           }
         } else if (filterTab === 'today') {
-          const isToday = (task.hasDeadline && task.endDate === todayStr) || (!task.hasDeadline && task.startDate === todayStr);
-          if (!isToday || task.status === 'completed') return false;
+          if (!task.hasDeadline || task.status === 'completed' || task.endDate !== todayStr) return false;
+        } else if (filterTab === 'no_deadline') {
+          if (task.hasDeadline || task.status === 'completed') return false;
         } else if (filterTab === 'in_progress') {
           if (task.status === 'completed') return false;
         } else if (filterTab === 'completed') {
@@ -274,6 +279,21 @@ export const AllTasksModal: React.FC<AllTasksModalProps> = ({
             <span>🔥 ส่งวันนี้</span>
             <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${filterTab === 'today' ? 'bg-amber-600 text-slate-950' : 'bg-amber-100 text-amber-900'}`}>
               {todayCount}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setFilterTab('no_deadline')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer flex-shrink-0 ${
+              filterTab === 'no_deadline'
+                ? 'bg-slate-800 text-white shadow-xs'
+                : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+            }`}
+          >
+            <span>📌 ไม่มีกำหนด</span>
+            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${filterTab === 'no_deadline' ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-700'}`}>
+              {noDeadlineCount}
             </span>
           </button>
 

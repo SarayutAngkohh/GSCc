@@ -150,8 +150,8 @@ export interface OverdueTaskItem {
 }
 
 /**
- * Filter overdue tasks, tasks due today, and tasks due in next 3 days
- * Note: Tasks with hasDeadline: false are NEVER counted as overdue (per user requirement)
+ * Filter overdue tasks, tasks due today, tasks due in next 3 days, and tasks without deadline
+ * Note: Tasks with hasDeadline: false are NEVER counted as overdue or due today
  */
 export function getUpcomingDueTasks(tasks: Task[]) {
   const todayStr = getRealTodayDateString();
@@ -159,21 +159,22 @@ export function getUpcomingDueTasks(tasks: Task[]) {
   const overdueTasks: OverdueTaskItem[] = [];
   const dueTodayTasks: Task[] = [];
   const dueInThreeDaysTasks: { task: Task; daysLeft: number }[] = [];
+  const noDeadlineTasks: Task[] = [];
 
   tasks.forEach((t) => {
     if (t.status === 'completed') return;
 
-    // "ไม่นับงานที่ไม่มีกำหนด"
-    // Tasks with no deadline are NEVER overdue!
+    // "งานที่ไม่มีกำหนดส่งไปอยู่ใน ไม่มีกำหนดแทนที่จะเป็นส่งวันนี้"
     if (!t.hasDeadline) {
-      if (t.startDate === todayStr) {
-        dueTodayTasks.push(t);
-      }
+      noDeadlineTasks.push(t);
       return;
     }
 
     const deadlineDate = t.endDate || t.startDate;
-    if (!deadlineDate) return;
+    if (!deadlineDate) {
+      noDeadlineTasks.push(t);
+      return;
+    }
 
     const daysLeft = getDaysDiff(deadlineDate);
 
@@ -192,7 +193,8 @@ export function getUpcomingDueTasks(tasks: Task[]) {
   return {
     overdueTasks,
     dueTodayTasks,
-    dueInThreeDaysTasks
+    dueInThreeDaysTasks,
+    noDeadlineTasks
   };
 }
 

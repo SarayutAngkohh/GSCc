@@ -12,7 +12,8 @@ import {
   AlertTriangle,
   Play,
   Send,
-  Sparkles
+  Sparkles,
+  Calendar
 } from 'lucide-react';
 import { Task, CategoryItem } from '../types/task';
 import { 
@@ -55,7 +56,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
   if (!isOpen) return null;
 
   const categoryMap = new Map(categories.map((c) => [c.id, c]));
-  const { overdueTasks, dueTodayTasks, dueInThreeDaysTasks } = getUpcomingDueTasks(tasks);
+  const { overdueTasks, dueTodayTasks, dueInThreeDaysTasks, noDeadlineTasks } = getUpcomingDueTasks(tasks);
   const totalUpcomingCount = overdueTasks.length + dueTodayTasks.length + dueInThreeDaysTasks.length;
 
   const handleUpdateSettings = (newSettings: Partial<NotificationSettings>) => {
@@ -413,6 +414,78 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                 ) : (
                   <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-500 text-center">
                     ไม่มีงานที่ใกล้ถึงกำหนดส่งใน 3 วันข้างหน้า
+                  </div>
+                )}
+              </div>
+
+              {/* SECTION 3: NO DEADLINE (งานที่ไม่มีกำหนดส่ง) */}
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-700 uppercase tracking-wide">
+                    <Calendar className="w-4 h-4 text-slate-500" />
+                    <span>งานที่ไม่มีกำหนดส่ง (No Deadline)</span>
+                  </div>
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                    {noDeadlineTasks.length} งาน
+                  </span>
+                </div>
+
+                {noDeadlineTasks.length > 0 ? (
+                  <div className="space-y-2">
+                    {noDeadlineTasks.map((task) => {
+                      const cat = categoryMap.get(task.categoryId) || categories[0];
+                      return (
+                        <div
+                          key={task.id}
+                          className="p-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50/50 hover:bg-slate-100/70 transition-all flex items-start justify-between gap-3 cursor-pointer shadow-2xs"
+                          onClick={() => {
+                            onClose();
+                            onSelectTask(task);
+                          }}
+                        >
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span 
+                                className="px-2 py-0.2 rounded-md text-[10px] font-bold text-white"
+                                style={{ backgroundColor: cat?.color || '#3b82f6' }}
+                              >
+                                {cat?.name}
+                              </span>
+                              <span className="text-[10px] font-bold px-2 py-0.2 rounded-md bg-slate-200 text-slate-700 flex items-center gap-1">
+                                <span>ไม่มีกำหนดส่ง</span>
+                              </span>
+                              <span className="text-[11px] text-slate-500">
+                                (วันที่บันทึก: {formatThaiDate(task.startDate, { short: true })})
+                              </span>
+                            </div>
+                            <h4 className="text-sm font-bold text-slate-900 leading-snug font-prompt">
+                              {task.title}
+                            </h4>
+                            {task.description && (
+                              <p className="text-xs text-slate-600 line-clamp-1">
+                                {task.description}
+                              </p>
+                            )}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onToggleStatus(task.id);
+                            }}
+                            className="p-2 rounded-xl bg-white hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 border border-slate-200 transition-colors flex-shrink-0 cursor-pointer"
+                            title="ทำเครื่องหมายว่าเสร็จแล้ว"
+                          >
+                            <CheckCircle2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-500 text-center">
+                    ไม่มีงานที่ไม่มีกำหนดส่ง
                   </div>
                 )}
               </div>
